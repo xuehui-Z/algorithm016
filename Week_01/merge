@@ -1,0 +1,14 @@
+class Solution {
+    public void merge(int[] nums1, int m, int[] nums2, int n) {
+        int[] copy_n1 = new int[m];
+        System.arraycopy(nums1,0,copy_n1,0,m);
+        int p1 = 0;
+        int p2 = 0;
+        int p = 0;
+        while ((p1 < m) && (p2 < n) ) {
+            nums1[p++] = copy_n1[p1] < nums2[p2] ? copy_n1[p1++] : nums2[p2++];
+        }
+        if (p1 < m) System.arraycopy(copy_n1,p1,nums1,p1+p2,m-p1);
+        if (p2 < n) System.arraycopy(nums2,p2,nums1,p1+p2,n-p2);
+    }
+}
