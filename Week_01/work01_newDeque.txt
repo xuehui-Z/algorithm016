@@ -1,0 +1,13 @@
+Deque<String> deque = new LinkedList<String>();
+        //使用addFirst代替push方法
+        deque.addFirst("a");
+        deque.addFirst("b");
+        deque.addFirst("c");
+        System.out.println(deque);
+        //使用peekFirst()代替peek方法
+        System.out.println(deque.peekFirst());
+        System.out.println(deque);
+        while (!deque.isEmpty()) {
+            System.out.println(deque.pollFirst());
+        }
+        System.out.println(deque);

@@ -1,0 +1,48 @@
+解法1：双指针
+class Solution {
+    public int trap(int[] height) {
+        int ans = 0;
+        int left = 0, right = height.length - 1;
+        int max_left = 0, max_right = 0;
+        while (left < right) {
+            if (height[left] < height[right]) {
+                if ((height[left] >= max_left)) {
+                    max_left = height[left];
+                } else {
+                    ans += (max_left - height[left]);
+                }
+                left++;
+            } else {
+                if ((height[right] >= max_right)) {
+                    max_right = height[right];
+                } else {
+                    ans += (max_right - height[right]);
+                }
+                right--;
+            }
+        }
+        return ans;
+    }
+}
+
+解法2：使用栈
+class Solution {
+    public int trap(int[] height) {
+        int ans = 0, cur = 0;
+        Deque<Integer> stackUtil = new ArrayDeque<>();
+        while (cur < height.length) {
+            int right = height[cur];
+            while (!stackUtil.isEmpty() && (right > height[stackUtil.peek()])) {
+                int top = height[stackUtil.pop()];
+                if (stackUtil.isEmpty()) break;
+
+                int left = height[stackUtil.peek()];
+                int minH = Math.min(left,right);
+                int lean = cur - stackUtil.peek() - 1;
+                ans += lean * (minH - top);
+            }
+            stackUtil.push(cur++);
+        }
+        return ans;
+    }
+}
