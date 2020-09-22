@@ -6,13 +6,18 @@
 ### HashMap结构  
 - HashMap实际上是一个Node结构的**数组**。  
  `transient Node<K,V>[] table;`   
-- HashMap的默认**初始容量**：`static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16.`
-- HashMap的**最大容量**：`static final int MAXIMUM_CAPACITY = 1 << 30;//十亿多。`
-- HashMap的**容量**：`transient int size;//每次有新数据插入时，size+1。`
-- HashMap的默认**加载因子**：`static final float DEFAULT_LOAD_FACTOR = 0.75f;`  
-加载因子是判断是否需要扩容的依据，当size大于加载因子*当前容量的时候，就会进行扩容处理。
+- HashMap的默认**初始容量**：  
+  `static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16.`
+- HashMap的**最大容量**：  
+  `static final int MAXIMUM_CAPACITY = 1 << 30; //十亿多。`
+- HashMap的**容量**：  
+  `transient int size;  //每次有新数据插入时，size+1。`
+- HashMap的默认**加载因子**：  
+  `static final float DEFAULT_LOAD_FACTOR = 0.75f; //提高空间利用率和 减少查询成本的折中，主要是泊松分布，0.75的话碰撞最小`  
+  - 加载因子是判断是否需要扩容的依据，当size大于加载因子*当前容量的时候，就会进行扩容处理。  
+  - HashMap有两个参数影响其性能：**初始容量和加载因子**。容量是哈希表中桶的数量，初始容量只是哈希表在创建时的容量。加载因子是哈希表在其容量自动扩容之前可以达到多满的一种度量。当哈希表中的条目数超出了加载因子与当前容量的乘积时，则要对该哈希表进行扩容、rehash操作（即重建内部数据结构），扩容后的哈希表将具有两倍的原容量  
 - **Node的结构**  
-Class Node作为HashMap中保存数据的主题，主要是有Key，Value以及指向下一个节点的next指针和用来计算下标值得hash值。
+  Class Node作为HashMap中保存数据的主题，主要是有Key，Value以及指向下一个节点的next指针和用来计算下标值得hash值。
    ```java
    static class Node<K,V> implements Map.Entry<K,V> {
         final int hash;
@@ -31,7 +36,7 @@ Class Node作为HashMap中保存数据的主题，主要是有Key，Value以及�
    ``` 
   其中next指针构成了一个**链表**，是为了解决Hash冲突用的，当出现Hash冲突时，会把冲突的值保存在链表中。 
 - **TreeNode的结构**   
-TreeNode是Java1.8中做的修改，当Node链表的长度超过指定值时，会把Node链表转变为TreeNode，TreeNode是红黑树。
+  TreeNode是Java1.8中做的修改，当Node链表的长度超过指定值时，会把Node链表转变为TreeNode，TreeNode是红黑树。
 	```java
 	static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
         TreeNode<K,V> parent;  // red-black tree links
@@ -45,7 +50,7 @@ TreeNode是Java1.8中做的修改，当Node链表的长度超过指定值时，�
 		...
 	}
 	```
-	*关于红黑树的特性和结构，后面课程讲完红黑树再来更新 ^_^*
+	*关于红黑树的特性和结构，后面课程讲完红黑树再来更新 \^_^*
 ### HashMap构造方法
 - **无参构造方法**使用默认的初始容量的加载因子。
     ```java
@@ -83,7 +88,7 @@ TreeNode是Java1.8中做的修改，当Node链表的长度超过指定值时，�
 	```
 ### HashMap常用方法
 - **get方法**  
-	因为HashMap是数组+链表(红黑树)的形式，所以get方法首先是根据Key的Hash值找到数组下标，再遍历数组或者树来找到相应的Key值返回。
+  因为HashMap是数组+链表(红黑树)的形式，所以get方法首先是根据Key的Hash值找到数组下标，再遍历数组或者树来找到相应的Key值返回。
 	```java
 	final Node<K,V> getNode(int hash, Object key) { //传入的hash是要寻找的Key的Hash（getNode(hash(key), key)）
         Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
@@ -104,16 +109,15 @@ TreeNode是Java1.8中做的修改，当Node链表的长度超过指定值时，�
         }
         return null;
     }
-	```  
+	```
 - **Put方法**  
-	1.计算Key的Hash值；  
-	2.通过Hash值和Node数组的长度-1进行与运算，得到数组下标index；  
-	3.如果数组下标index的位置是空的，则不存在Hash冲突，将对象放入该位置，结束。  
-	4.如果数组下标index的位置不为空，判断该位置的Key和要插入的Key的Hash值和Value值，  
-	- 4.1.如果相同，则把该位置的Value值替换成传入的Value值，并返回老的Value值。 
-	- 4.2.如果不相同则判断当前位置是不是树，如果是树，就把传入的Key和Value插入到树中。如果不是插入链表中，再判断链表长度是否到了指定的长度(static final int TREEIFY_THRESHOLD = 8;)，是的话再把链表转化成红黑树。  
-	5.如果数组长度大于加载因子*当前容量，则进行扩容处理。  
-	
+  1. 计算Key的Hash值；  
+  2. 通过Hash值和Node数组的长度-1进行与运算，得到数组下标index；  
+  3. 如果数组下标index的位置是空的，则不存在Hash冲突，将对象放入该位置，结束。  
+  4. 如果数组下标index的位置不为空，判断该位置的Key和要插入的Key的Hash值和Value值，  
+  - 4.1. 如果相同，则把该位置的Value值替换成传入的Value值，并返回老的Value值。 
+  - 4.2. 如果不相同则判断当前位置是不是树，如果是树，就把传入的Key和Value插入到树中。如果不是插入链表中，再判断链表长度是否到了指定的长度(static final int TREEIFY_THRESHOLD = 8;)，是的话再把链表转化成红黑树。  
+  5. 如果数组长度大于加载因子*当前容量，则进行扩容处理。  	
 	```java
 	final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
@@ -159,29 +163,14 @@ TreeNode是Java1.8中做的修改，当Node链表的长度超过指定值时，�
     }
 	```  
 - **扩容机制**  
-	1.如果原来数字容量大于等于最大容量，直接返回原来数组。  
-	2.创建一个新数组，容量为原来的两倍. `(newCap = oldCap << 1) < MAXIMUM_CAPACITY`，并且扩容后容量要小于最大容量。  
-	新的加载因子也变为原来的两倍。  
-	3.遍历原来的数组，将旧数组的对象存放到新的数组中。
-	- 3.1 如果Node没有next，直接重新计算下标，放入。
-	- 3.2 如果Node是树，遍历树中的元素，重新计算下标值，将其放入新数组中。`((TreeNode<K,V>)e).split(this, newTab, j, oldCap);`
-	- 3.3 如果Node不是树，遍历链表中的元素，重新计算下标值，放入。
+  1. 如果原来数字容量大于等于最大容量，直接返回原来数组。  
+  2. 创建一个新数组，容量为原来的两倍. `(newCap = oldCap << 1) < MAXIMUM_CAPACITY`，并且扩容后容量要小于最大容量。  
+     新的加载因子也变为原来的两倍。  
+  3. 遍历原来的数组，将旧数组的对象存放到新的数组中。  
+    3.1 如果Node没有next，直接重新计算下标，放入。  
+    3.2 如果Node是树，遍历树中的元素，重新计算下标值，将其放入新数组中。`((TreeNode<K,V>)e).split(this, newTab, j, oldCap);`  
+    3.3 如果Node不是树，遍历链表中的元素，重新计算下标值，放入。
 	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

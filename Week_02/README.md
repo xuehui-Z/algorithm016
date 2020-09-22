@@ -1,182 +1,59 @@
 # 学习笔记 第二周
-
-# HashMap小节  
-### Hash算法简介
-- **Hash算法**是把任意长度的输入值，返回固定长度的输出值。通常输出值的长度远小于输入值的长度，所以这是一种压缩映射。
-- **Hash冲突**是指两个不同的输入值，返回的是相同的输出值。  
-
-### HashMap结构  
-- HashMap实际上是一个Node结构的**数组**。  
- `transient Node<K,V>[] table;`   
-- HashMap的默认**初始容量**：`static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16.`
-- HashMap的**最大容量**：`static final int MAXIMUM_CAPACITY = 1 << 30;//十亿多。`
-- HashMap的**容量**：`transient int size;//每次有新数据插入时，size+1。`
-- HashMap的默认**负载因子**：`static final float DEFAULT_LOAD_FACTOR = 0.75f;`  
-负载因子是判断是否需要扩容的依据，当size大于负载因子的时候，就会进行扩容处理。
-- **Node的结构**  
-Class Node作为HashMap中保存数据的主题，主要是有Key，Value以及指向下一个节点的next指针和用来计算下标值得hash值。
-   ```java
-   static class Node<K,V> implements Map.Entry<K,V> {
-        final int hash;
-        final K key;
-        V value;
-        Node<K,V> next;
-
-        Node(int hash, K key, V value, Node<K,V> next) {
-            this.hash = hash;
-            this.key = key;
-            this.value = value;
-            this.next = next;
-        }
-		...
-   }
-   ``` 
-  其中next指针构成了一个**链表**，是为了解决Hash冲突用的，当出现Hash冲突时，会把冲突的值保存在链表中。 
-- **TreeNode的结构**   
-TreeNode是Java1.8中做的修改，当Node链表的长度超过指定值时，会把Node链表转变为TreeNode，TreeNode是红黑树。
-	```java
-	static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
-        TreeNode<K,V> parent;  // red-black tree links
-        TreeNode<K,V> left;
-        TreeNode<K,V> right;
-        TreeNode<K,V> prev;    // needed to unlink next upon deletion
-        boolean red;
-        TreeNode(int hash, K key, V val, Node<K,V> next) {
-            super(hash, key, val, next);
-        }
-		...
-	}
-	```
-	*关于红黑树的特性和结构，后面课程讲完红黑树再来更新 ^_^*
-### HashMap构造方法
-- **无参构造方法**使用默认的初始容量的负载因子。
+## 知识总结
+  算法学习的第二周已经结束了，这一周学习了**哈希表，集合，树，堆以及图**这些数据结构的知识。并且针对不同的数据结构，有其不同的使用途径和算法。  
+### 哈希表
+  - **哈希算法**：任意长度的输入值，返回固定长度的输出值
+  - **哈希冲突**：存在不同的输入值，返回的是相同的输出值
+  - 哈希表（Hash table），也叫散列表，是根据关键码值(Key，value)而直接进行访问的数据结构。它通过把关键码值通过哈希算法映射到表中一个位置来访问记录，以加快查找的速度。
+  - 哈希表的寻址在理想状态下是O(1)的，因为有Hash冲突的存在，最坏的情况下是O(n)的，不过可以通过优化Hash算法和扩大容器容量来避免Hash冲突。
+### 哈希表的集合实现
+  - **HashMap：**  
+  主要的实现就是HashMap，参照后面的HashMap小节。里面介绍了Hash算法和Hash冲突，以及Java1.8中整个HashMap的结构和解决Hash冲突的实现方法。
+  - **HashSet：**  
+  底层就是通过HashMap来实现，只是利用了Map中Key的位置来保存数据，达到无重复性，故不再赘述。
+  - *参考题目：* 
+    - 有效的字母异位词：https://leetcode-cn.com/problems/valid-anagram/description/
+    - 字母异位词分组：https://leetcode-cn.com/problems/group-anagrams/
+    - 两数之和：https://leetcode-cn.com/problems/two-sum/description/	
+### 树
+  - 为了解决一维的链表寻址慢的问题，作为二维结构的树应运而生，即一个节点不再只有一个next指针，而是由两个或者多个。
+  - 相对于一维结构的寻址时间复杂度O(n),树的寻址时间复杂度优化到了O(log(n))。
+### 树的实现
+  - **二叉树**
+  二叉树只有两个节点，左节点和右节点,节点的定义如下：
     ```java
-    public HashMap() {
-        this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
-    }
+      class TreeNode {
+          int val;
+          TreeNode left;
+          TreeNode right;
+          ...
+      }
     ```
-- **指定初始容量**，使用默认负载因子。
-	```java
-	public HashMap(int initialCapacity) {
-        this(initialCapacity, DEFAULT_LOAD_FACTOR);
-    }
-	```
-- **指定容量和负载因子**，当指定的值小于零或者负载因子不合法时抛出异常，当指定的初始容量大于最大容量时，使用最大容量。
-	```java
-	public HashMap(int initialCapacity, float loadFactor) {
-        if (initialCapacity < 0)
-            throw new IllegalArgumentException("Illegal initial capacity: " +
-                                               initialCapacity);
-        if (initialCapacity > MAXIMUM_CAPACITY)
-            initialCapacity = MAXIMUM_CAPACITY;
-        if (loadFactor <= 0 || Float.isNaN(loadFactor))
-            throw new IllegalArgumentException("Illegal load factor: " +
-                                               loadFactor);
-        this.loadFactor = loadFactor;
-        this.threshold = tableSizeFor(initialCapacity);
-    }
-	```
-- 构造一个新的HashMap，并将另一个Map保存到新的HashMap中。
-	```java
-	public HashMap(Map<? extends K, ? extends V> m) {
-        this.loadFactor = DEFAULT_LOAD_FACTOR;
-        putMapEntries(m, false);
-    }
-	```
-### HashMap常用方法
-- **get方法**  
-	因为HashMap是数组+链表(红黑树)的形式，所以get方法首先是根据Key的Hash值找到数组下标，再遍历数组或者树来找到相应的Key值返回。
-	```java
-	final Node<K,V> getNode(int hash, Object key) { //传入的hash是要寻找的Key的Hash（getNode(hash(key), key)）
-        Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
-        if ((tab = table) != null && (n = tab.length) > 0 &&
-            (first = tab[(n - 1) & hash]) != null) {  //先判断数组是否为空，再判断这个Key的Hash对应的数组位置是否为空
-            if (first.hash == hash && // always check first node //Key的Hash值判断
-                ((k = first.key) == key || (key != null && key.equals(k))))  //Key的Value值判断
-                return first;  //KeyHash值和Value值都一样就找到了
-            if ((e = first.next) != null) {  //否则就便利数组
-                if (first instanceof TreeNode)  //如果是红黑树了，就从树中找
-                    return ((TreeNode<K,V>)first).getTreeNode(hash, key);
-                do {  //如果不是树，就遍历数组，知道找到Key的Hash值和Value值都一样的对象。
-                    if (e.hash == hash &&
-                        ((k = e.key) == key || (key != null && key.equals(k))))
-                        return e;
-                } while ((e = e.next) != null);
-            }
-        }
-        return null;
-    }
-	```  
-- **Put方法**  
-	1.计算Key的Hash值；  
-	2.通过Hash值和Node数组的长度-1进行与运算，得到数组下标index；  
-	3.如果数组下标index的位置是空的，则不存在Hash冲突，将对象放入该位置，结束。  
-	4.如果数组下标index的位置不为空，判断该位置的Key和要插入的Key的Hash值和Value值，  
-	- 4.1.如果相同，则把该位置的Value值替换成传入的Value值，并返回老的Value值。 
-	- 4.2.如果不相同则判断当前位置是不是树，如果是树，就把传入的Key和Value插入到树中。如果不是插入链表中，再判断链表长度是否到了指定的长度(static final int TREEIFY_THRESHOLD = 8;)，是的话再把链表转化成红黑树。  
-	5.如果数组长度大于负载因子，则进行扩容处理。  
+    二叉树的遍历根据遍历根节点的顺序分为前序遍历（根-左-右），中序遍历（左-根-右），后续遍历（左-右-根）  
+  - *参考题目：*  
+    - 二叉树的中序遍历：https://leetcode-cn.com/problems/binary-tree-inorder-traversal/
+    - 二叉树的前序遍历：https://leetcode-cn.com/problems/binary-tree-preorder-traversal/
+  - **二叉搜索树**  
+  二叉搜索树是一种有序树，并且满足一下特点
+    1. 左子树上所有结点的值均小于它的根结点的值； 
+    2. 右子树上所有结点的值均大于它的根结点的值； 
+    3. 以此类推：左、右子树也分别为二叉查找树。（这就是重复性！）  
+  所以二叉所搜树的中序遍历就是升序排列。
+### 堆
+  - **定义**：可以迅速找到一堆数中的最大值或者最小值的数据结构称之为堆，最大值或最小值放在堆顶，堆顶是最大值的称之为大顶堆，堆顶是最小值的称之为最小堆。
+  - **堆的主要实现**：二叉堆和斐波那契堆
+    - 二叉堆和二叉搜索树相似，不同点是二叉搜索树的左右节点有大小关系，而堆的左右节点没有要求，只是要求根节点大于/小于子节点。
+	- 斐波那契数列是是指当前值等于前两个值得和，即a[i] = a[i-1] + a[i-2]；
+  - **堆排序算法**：参照HeapSort.md里面的介绍。
+  - *参考题目：*
+    - 爬楼梯：https://leetcode-cn.com/problems/climbing-stairs/
 	
-	```java
-	final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
-                   boolean evict) {
-        Node<K,V>[] tab; Node<K,V> p; int n, i;
-        if ((tab = table) == null || (n = tab.length) == 0)
-            n = (tab = resize()).length;  //如果数组为空，进行扩容处理，初始化HashMap
-        if ((p = tab[i = (n - 1) & hash]) == null)
-            tab[i] = newNode(hash, key, value, null);
-        else {
-            Node<K,V> e; K k;
-            if (p.hash == hash &&
-                ((k = p.key) == key || (key != null && key.equals(k))))
-                e = p;
-            else if (p instanceof TreeNode)
-                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-            else {
-                for (int binCount = 0; ; ++binCount) {
-                    if ((e = p.next) == null) {
-                        p.next = newNode(hash, key, value, null);
-                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
-                            treeifyBin(tab, hash);
-                        break;
-                    }
-                    if (e.hash == hash &&
-                        ((k = e.key) == key || (key != null && key.equals(k))))
-                        break;
-                    p = e;
-                }
-            }
-            if (e != null) { // existing mapping for key
-                V oldValue = e.value;
-                if (!onlyIfAbsent || oldValue == null)
-                    e.value = value;
-                afterNodeAccess(e);
-                return oldValue;
-            }
-        }
-        ++modCount;
-        if (++size > threshold)
-            resize();
-        afterNodeInsertion(evict);
-        return null;
-    }
-	```  
-- **扩容机制**  
-	1.如果原来数字容量大于等于最大容量，直接返回原来数组。  
-	2.创建一个新数组，容量为原来的两倍. `(newCap = oldCap << 1) < MAXIMUM_CAPACITY`，并且扩容后容量要小于最大容量。  
-	新的负载因子也变为原来的两倍。  
-	3.遍历原来的数组，将旧数组的对象存放到新的数组中。
-	- 3.1 如果Node没有next，直接重新计算下标，放入。
-	- 3.2 如果Node是树，遍历树中的元素，重新计算下标值，将其放入新数组中。`((TreeNode<K,V>)e).split(this, newTab, j, oldCap);`
-	- 3.3 如果Node不是树，遍历链表中的元素，重新计算下标值，放入。
-	
-
-
-
-
-
-
-
-
+### 总结
+堆和树有着相似的地方，最好不要搞混，就像二叉搜索树和大/小顶堆，都是树状结构。但是区别是有的：  
+  1. 二叉搜索树不是完全二叉树；而堆是完全二叉树
+  2. 二叉搜索树的左右节点有大小之分；而堆只区分根节点和子节点，两个子节点之间没有要求
+  3. 二叉搜索树完全有序；而堆相对有序
+  4. 二叉搜索树维护比较麻烦，所以一般用来做查询；堆的维护相对简单，可以用来修改，排序。
 
 
 
