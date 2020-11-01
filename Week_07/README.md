@@ -113,6 +113,7 @@
   - AVL trees providefaster lookups than Red Black Trees because they are more strictly balanced.(因为AVL更家的平衡，所以它的搜索比红黑树更有效)   
   - Red Black Trees providefaster insertion and removal operations than AVL trees as fewer rotations are done due to relatively relaxed balancing.(因为红黑树旋转操作比AVL少，所以他的新增和删除比AVL更有效)  
   - AVL trees storebalance factors or heightswith each node, thus requires storage for an integer per node whereas Red Black Tree requires only 1 bit of information per node.(AVL中每个节点有一个Integer类型的字段保存平衡因子，红黑树中每个节点有一个Byte类型的字段记录颜色)
-  - Red Black Trees are used in most of the language libraries likemap, multimap, multisetin C++ whereas AVL trees are used in databases where faster retrievals are required.(红黑树经常被用于一些语言的类库中，类似于Java的HashMap,AVL常被用于要去读操作多的数据库中)
-
+  - Red Black Trees are used in most of the language libraries likemap, multimap, multisetin C++ whereas AVL trees are used in databases where faster retrievals are required.(红黑树经常被用于一些语言的类库中，类似于Java的HashMap,AVL常被用于要去读操作多的数据库中)  
+### 最近学习情况
+  最近这个月工作真的是996，周天甚至都加班，时间真的是不够多，每天回家刷三四道题就到很晚了。好在前一周的动态规划课程时间币教程，学习的还可以，也做了挺多的题。不过这周的课真的感觉没有完全吸收，题目也做得少，只能找时间再回来学习。还是题目每天刷四五道(旧题为主)。
   
